@@ -33,27 +33,23 @@ export async function registerRoutes(
     }
 
     const body = req.body;
+
+    const partialSchema = insertProspectSchema.partial();
+    const parsed = partialSchema.safeParse(body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: parsed.error.errors.map((e) => e.message).join(", ") });
+    }
+
+    const validated = parsed.data;
     const updates: Record<string, unknown> = {};
 
-    if (body.companyName !== undefined) updates.companyName = body.companyName;
-    if (body.roleTitle !== undefined) updates.roleTitle = body.roleTitle;
-    if (body.jobUrl !== undefined) updates.jobUrl = body.jobUrl;
-    if (body.notes !== undefined) updates.notes = body.notes;
-
-    if (body.status !== undefined) {
-      if (!STATUSES.includes(body.status)) {
-        return res.status(400).json({ message: `Status must be one of: ${STATUSES.join(", ")}` });
-      }
-      updates.status = body.status;
-    }
-
-    if (body.interestLevel !== undefined || body.interest_level !== undefined) {
-      const level = body.interestLevel ?? body.interest_level;
-      if (!INTEREST_LEVELS.includes(level)) {
-        return res.status(400).json({ message: `Interest level must be one of: ${INTEREST_LEVELS.join(", ")}` });
-      }
-      updates.interestLevel = level;
-    }
+    if (validated.companyName !== undefined) updates.companyName = validated.companyName;
+    if (validated.roleTitle !== undefined) updates.roleTitle = validated.roleTitle;
+    if (validated.jobUrl !== undefined) updates.jobUrl = validated.jobUrl;
+    if ("salary" in body) updates.salary = validated.salary ?? null;
+    if (validated.notes !== undefined) updates.notes = validated.notes;
+    if (validated.status !== undefined) updates.status = validated.status;
+    if (validated.interestLevel !== undefined) updates.interestLevel = validated.interestLevel;
 
     const updated = await storage.updateProspect(id, updates);
     res.json(updated);
