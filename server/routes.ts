@@ -47,6 +47,7 @@ export async function registerRoutes(
     if (validated.roleTitle !== undefined) updates.roleTitle = validated.roleTitle;
     if (validated.jobUrl !== undefined) updates.jobUrl = validated.jobUrl;
     if ("salary" in body) updates.salary = validated.salary ?? null;
+    if ("applicationDeadline" in body) updates.applicationDeadline = validated.applicationDeadline ?? null;
     if (validated.notes !== undefined) updates.notes = validated.notes;
     if (validated.status !== undefined) updates.status = validated.status;
     if (validated.interestLevel !== undefined) updates.interestLevel = validated.interestLevel;
