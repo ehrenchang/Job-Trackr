@@ -17,7 +17,7 @@ server/
   db.ts                       - PostgreSQL connection pool (Drizzle)
   routes.ts                   - API route handlers (GET/POST/PATCH/DELETE)
   storage.ts                  - Storage interface + DatabaseStorage class
-  prospect-helpers.ts         - Pure helper functions (getNextStatus, validateProspect, isTerminalStatus)
+  prospect-helpers.ts         - Pure helper functions (getNextStatus, validateProspect, getDeadlineStatus, isTerminalStatus)
 client/src/
   App.tsx                     - Root component, routing, providers
   pages/home.tsx              - Kanban board with 7 status columns
@@ -30,11 +30,12 @@ client/src/
 
 ## Database
 
-Single `prospects` table: id, company_name, role_title, job_url, status, interest_level, salary, notes, created_at.
+Single `prospects` table: id, company_name, role_title, job_url, status, interest_level, salary, application_deadline, notes, created_at.
 
 - **Statuses**: Bookmarked, Applied, Phone Screen, Interviewing, Offer, Rejected, Withdrawn
 - **Interest levels**: High, Medium, Low
 - **Salary**: Optional integer field, displayed as formatted currency (e.g. "$120,000")
+- **Application Deadline**: Optional date field. Cards show "Deadline reached" (red) if past/today, "Due soon" (amber) if within 7 days, or the date quietly if further out
 
 ## API
 

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { Prospect } from "@shared/schema";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Trash2, Pencil, Flame, ThumbsUp, Minus, DollarSign } from "lucide-react";
+import { ExternalLink, Trash2, Pencil, Flame, ThumbsUp, Minus, DollarSign, CalendarClock, AlertTriangle, CalendarX } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -12,6 +12,51 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { EditProspectForm } from "./edit-prospect-form";
+
+function getDeadlineStatus(deadline: string): "reached" | "due-soon" | "upcoming" {
+  const today = new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const deadlineDate = new Date(deadline + "T00:00:00");
+  const diffMs = deadlineDate.getTime() - todayStart.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  if (diffDays <= 0) return "reached";
+  if (diffDays <= 7) return "due-soon";
+  return "upcoming";
+}
+
+function DeadlineIndicator({ deadline }: { deadline: string }) {
+  const status = getDeadlineStatus(deadline);
+  const formatted = new Date(deadline + "T00:00:00").toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+
+  if (status === "reached") {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400" data-testid="deadline-reached">
+        <CalendarX className="w-3 h-3" />
+        Deadline reached - {formatted}
+      </span>
+    );
+  }
+
+  if (status === "due-soon") {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-600 dark:text-amber-400" data-testid="deadline-due-soon">
+        <AlertTriangle className="w-3 h-3" />
+        Due soon - {formatted}
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground" data-testid="deadline-upcoming">
+      <CalendarClock className="w-3 h-3" />
+      {formatted}
+    </span>
+  );
+}
 
 function InterestIndicator({ level }: { level: string }) {
   switch (level) {
@@ -112,6 +157,10 @@ export function ProspectCard({ prospect }: { prospect: Prospect }) {
             </span>
           )}
         </div>
+
+        {prospect.applicationDeadline && (
+          <DeadlineIndicator deadline={prospect.applicationDeadline} />
+        )}
 
         {prospect.jobUrl && (
           <a

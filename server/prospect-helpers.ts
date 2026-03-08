@@ -47,7 +47,30 @@ export function validateProspect(data: Record<string, unknown>): { valid: boolea
     }
   }
 
+  if (data.applicationDeadline !== undefined && data.applicationDeadline !== null) {
+    if (typeof data.applicationDeadline !== "string") {
+      errors.push("Application deadline must be a date string");
+    } else if (isNaN(Date.parse(data.applicationDeadline))) {
+      errors.push("Application deadline must be a valid date");
+    }
+  }
+
   return { valid: errors.length === 0, errors };
+}
+
+export function getDeadlineStatus(deadline: string, now?: Date): "reached" | "due-soon" | "upcoming" | null {
+  if (!deadline) return null;
+  const today = now ?? new Date();
+  const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const deadlineDate = new Date(deadline + "T00:00:00");
+  if (isNaN(deadlineDate.getTime())) return null;
+
+  const diffMs = deadlineDate.getTime() - todayStart.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays <= 0) return "reached";
+  if (diffDays <= 7) return "due-soon";
+  return "upcoming";
 }
 
 export function isTerminalStatus(status: string): boolean {
